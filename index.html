@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shutter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="view"></canvas>
+  <div id="flash"></div>
+
+  <!-- ============================================================ HUD -->
+  <div id="hud" hidden>
+    <header class="hud-top">
+      <div class="chip chamber"><span class="k">CH</span><b id="lvlNum">01</b><span id="lvlName">Step</span></div>
+      <p id="hint" class="hint"><span id="hintText"></span><kbd>H</kbd></p>
+      <div class="chip film" id="filmChip"><span class="ico" id="filmIco" aria-hidden="true"></span><span id="filmName">Shutter 400</span><b id="filmCount">0/1</b></div>
+    </header>
+
+    <div id="titleCard" class="title-card" hidden>
+      <p class="tc-eyebrow" id="tcEyebrow">Chamber 01</p>
+      <h2 class="tc-name" id="tcName">Step</h2>
+      <div class="tc-films" id="tcFilms"></div>
+    </div>
+
+    <div id="reticle" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><b></b></div>
+    <div id="aimLabel"></div>
+    <div id="holdRing" hidden><span>Restarting</span></div>
+    <div id="toast" role="status"></div>
+
+    <div id="keys" class="keys"></div>
+    <div id="film">
+      <div class="edge"><span>◂ Q</span><span id="filmEdge">Shutter 400</span><span>Q ▸</span></div>
+      <div id="strip"></div>
+    </div>
+    <div id="readout" class="readout" hidden></div>
+  </div>
+
+  <!-- ============================================================ MENU -->
+  <section id="menu" class="overlay">
+    <div class="shell">
+      <aside class="side">
+        <p class="eyebrow" id="menuEyebrow">A first-person puzzle</p>
+        <h1 class="logo"><button type="button" id="logoBtn">Shutter</button></h1>
+        <p class="tagline">Photograph it. Print it somewhere better.</p>
+        <nav class="nav">
+          <button type="button" class="btn primary" id="playBtn">Play</button>
+          <button type="button" class="btn" id="restartBtn" hidden>Restart chamber</button>
+          <button type="button" class="btn" data-panel="chambers">Chambers</button>
+          <button type="button" class="btn" data-panel="hints">Hints</button>
+          <button type="button" class="btn" data-panel="settings">Settings</button>
+          <button type="button" class="btn" data-panel="controls">Controls</button>
+        </nav>
+        <p id="menuNote" class="note"></p>
+      </aside>
+
+      <div class="main">
+        <!-- overview -->
+        <section class="panel" id="panel-home">
+          <article class="now">
+            <div class="now-img" id="nowImg"></div>
+            <div class="now-meta">
+              <p class="eyebrow" id="nowEyebrow">Up next</p>
+              <h2 id="nowName">Step</h2>
+              <p id="nowFilm" class="now-film"></p>
+            </div>
+          </article>
+          <div class="inks">
+            <div class="ink o">
+              <span class="swatch" aria-hidden="true"></span>
+              <div><h3>Orange prints have weight</h3><p>They fall, tumble and land where gravity puts them. Crates can be shoved around.</p></div>
+            </div>
+            <div class="ink b">
+              <span class="swatch" aria-hidden="true"></span>
+              <div><h3>Blue prints float</h3><p>They hang exactly where you print them, even over thin air.</p></div>
+            </div>
+          </div>
+          <ol class="steps">
+            <li><kbd class="m-click">Click</kbd><span>Photograph an object. It leaves the world and lands in your film strip.</span></li>
+            <li><kbd class="m-rclick">Right-click</kbd><span>Print it. It comes back on your crosshair, as far away as it was.</span></li>
+            <li><kbd>R</kbd><span>Hold R and move the mouse to rotate and push a print freehand before you place it.</span></li>
+          </ol>
+        </section>
+
+        <!-- chamber select -->
+        <section class="panel" id="panel-chambers" hidden>
+          <header class="panel-head"><h2>Chambers</h2><p id="progressText"></p></header>
+          <nav class="rollnav" id="rollNav" aria-label="Rolls" hidden></nav>
+          <div id="sheet" class="sheet"></div>
+        </section>
+
+        <!-- hints: this chamber, step by step, and a field guide to every mechanic -->
+        <section class="panel" id="panel-hints" hidden>
+          <header class="panel-head"><h2>Hints</h2><p id="hxSub">Reveal as little or as much as you like.</p></header>
+          <article class="hx">
+            <div class="hx-map" id="hxMap">
+              <div class="hx-wait" id="hxWait">Developing</div>
+              <img id="hxImg" alt="Overhead view of the chamber">
+              <svg id="hxSvg" viewBox="0 0 1000 625" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </div>
+            <div class="hx-side">
+              <p class="eyebrow" id="hxEyebrow">Chamber 01</p>
+              <h3 class="hx-name" id="hxName">Step</h3>
+              <div class="hx-levels" role="group" aria-label="How much help">
+                <button type="button" class="btn small" data-hx="1"><b>1</b> Nudge</button>
+                <button type="button" class="btn small" data-hx="2"><b>2</b> Key objects</button>
+                <button type="button" class="btn small" data-hx="3"><b>3</b> Walkthrough</button>
+              </div>
+              <p class="hx-text" id="hxText">Stuck? Start with a nudge.</p>
+              <ol class="hx-steps" id="hxSteps"></ol>
+            </div>
+          </article>
+          <header class="panel-head guide-head"><h2>Field guide</h2><p>Every mechanic, in motion.</p></header>
+          <div class="guide" id="guide"></div>
+        </section>
+
+        <!-- settings -->
+        <section class="panel" id="panel-settings" hidden>
+          <header class="panel-head"><h2>Settings</h2><p>Saved in this browser.</p></header>
+          <form class="settings" id="settingsForm">
+            <div class="set">
+              <label for="setSens">Look sensitivity</label>
+              <div class="ctl"><input type="range" id="setSens" min="0.2" max="3" step="0.05"><output id="setSensOut" for="setSens"></output></div>
+              <p class="help">Trackpads usually feel better around 1.5 or higher.</p>
+            </div>
+            <div class="set">
+              <label for="setRot">Print rotate speed</label>
+              <div class="ctl"><input type="range" id="setRot" min="0.3" max="3" step="0.05"><output id="setRotOut" for="setRot"></output></div>
+            </div>
+            <div class="set">
+              <label for="setFov">Field of view</label>
+              <div class="ctl"><input type="range" id="setFov" min="60" max="100" step="1"><output id="setFovOut" for="setFov"></output></div>
+            </div>
+            <div class="set">
+              <span class="lbl" id="arrowsLbl">Arrow keys</span>
+              <div class="seg" role="radiogroup" aria-labelledby="arrowsLbl">
+                <label><input type="radio" name="setArrows" value="move" id="setArrowsMove"><span>Move</span></label>
+                <label><input type="radio" name="setArrows" value="look" id="setArrowsLook"><span>Look around</span></label>
+              </div>
+              <p class="help">Look around lets you play with arrows and a trackpad without swiping all the time.</p>
+            </div>
+            <div class="set row">
+              <label for="setInvert">Invert vertical look</label>
+              <input type="checkbox" class="switch" id="setInvert">
+            </div>
+            <div class="set">
+              <div class="set-line">
+                <label for="setSwipeFlip">Reverse push and pull</label>
+                <input type="checkbox" class="switch" id="setSwipeFlip">
+              </div>
+              <p class="help">Scrolling or swiping toward you pulls a print in. If yours goes the other way, turn this on.</p>
+            </div>
+            <div class="set row">
+              <label for="setHints">Show control hints</label>
+              <input type="checkbox" class="switch" id="setHints">
+            </div>
+            <div class="set row">
+              <label for="setHand">Show the camera rig in your hands</label>
+              <input type="checkbox" class="switch" id="setHand">
+            </div>
+            <div class="set row">
+              <label for="setBob">Camera bob when you run</label>
+              <input type="checkbox" class="switch" id="setBob">
+            </div>
+            <div class="set row">
+              <label for="setVF">Look through the camera when you take a photo</label>
+              <input type="checkbox" class="switch" id="setVF">
+            </div>
+            <div class="set">
+              <label for="setMusic">Music</label>
+              <div class="ctl"><input type="range" id="setMusic" min="0" max="1" step="0.05"><output id="setMusicOut" for="setMusic"></output></div>
+            </div>
+            <div class="set">
+              <label for="setVol">Sound effects</label>
+              <div class="ctl"><input type="range" id="setVol" min="0" max="1" step="0.05"><output id="setVolOut" for="setVol"></output></div>
+            </div>
+            <div class="set">
+              <button type="button" class="btn small danger" id="resetProgress">Reset progress</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- controls -->
+        <section class="panel" id="panel-controls" hidden>
+          <header class="panel-head"><h2>Controls</h2><p class="mac-only">Mac trackpad gestures are listed next to each action.</p></header>
+          <dl class="ctrls">
+            <div><dt>Look</dt><dd><kbd>Mouse</kbd><kbd class="mac-only">Trackpad</kbd><span class="alt">or arrow keys, if set to Look around</span></dd></div>
+            <div><dt>Move</dt><dd><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dd></div>
+            <div><dt>Jump</dt><dd><kbd>Space</kbd></dd></div>
+            <div><dt>Photograph</dt><dd><kbd>Click</kbd><kbd>F</kbd></dd></div>
+            <div><dt>Print</dt><dd><kbd class="pc-only">Right-click</kbd><kbd class="mac-only">Two-finger click</kbd><kbd class="mac-only">⌃ Click</kbd><kbd>E</kbd></dd></div>
+            <div><dt>Push or pull a print</dt><dd><kbd class="pc-only">Scroll</kbd><kbd class="mac-only">Two-finger swipe ↕</kbd><span class="alt">toward you pulls it in, or</span><kbd>R</kbd><span class="alt">+ move mouse up or down</span></dd></div>
+            <div><dt>Rotate a print</dt><dd><kbd class="pc-only">Shift + scroll</kbd><kbd class="mac-only">Two-finger swipe ↔</kbd><kbd>R</kbd><span class="alt">+ move mouse sideways, or hold</span><kbd>Z</kbd><kbd>X</kbd></dd></div>
+            <div><dt>Snap to grid</dt><dd><kbd>G</kbd><span class="alt">toggles, off by default</span></dd></div>
+            <div><dt>Long exposure</dt><dd><span class="alt">Slow film: hold</span><kbd>Click</kbd><kbd>F</kbd><span class="alt">on something moving</span></dd></div>
+            <div><dt>Take a postcard</dt><dd><span class="alt">Postcard film:</span><kbd>Click</kbd><kbd>F</kbd><span class="alt">on a photo spot, then print it and walk in</span></dd></div>
+            <div><dt>Next photo</dt><dd><kbd>Q</kbd><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></dd></div>
+            <div><dt>Show hint</dt><dd><kbd>H</kbd></dd></div>
+            <div><dt>Restart chamber</dt><dd><span class="alt">hold</span><kbd class="pc-only">Backspace</kbd><kbd class="mac-only">Delete</kbd></dd></div>
+            <div><dt>Pause</dt><dd><kbd>Esc</kbd><kbd>P</kbd></dd></div>
+          </dl>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ chamber complete -->
+  <section id="done" class="overlay quiet" hidden>
+    <figure class="print">
+      <canvas id="doneImg" width="480" height="300"></canvas>
+      <figcaption>
+        <span class="eyebrow" id="doneSub">Chamber 01 · Step</span>
+        <strong id="doneTitle">Developed</strong>
+        <span id="doneProg"></span>
+      </figcaption>
+    </figure>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/build/cannon.min.js"></script>
+<script src="audio.js"></script>
+<script src="levels.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
